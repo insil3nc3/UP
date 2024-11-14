@@ -1,0 +1,134 @@
+package org.example;
+
+// Класс Claws (Когти)
+class Claws {
+    private int sharpness; // Острота когтей
+
+    public Claws(int sharpness) {
+        this.sharpness = sharpness;
+    }
+
+    public int getSharpness() {
+        return sharpness;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Claws claws = (Claws) obj;
+        return sharpness == claws.sharpness;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(sharpness);
+    }
+
+    @Override
+    public String toString() {
+        return "Claws{sharpness=" + sharpness + "}";
+    }
+}
+
+// Класс Teeth (Зубы)
+class Teeth {
+    private int size; // Размер зубов
+
+    public Teeth(int size) {
+        this.size = size;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Teeth teeth = (Teeth) obj;
+        return size == teeth.size;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(size);
+    }
+
+    @Override
+    public String toString() {
+        return "Teeth{size=" + size + "}";
+    }
+}
+
+// Класс Predator (Хищник)
+class Predator {
+    private Claws claws;
+    private Teeth teeth;
+
+    public Predator(Claws claws, Teeth teeth) {
+        this.claws = claws;
+        this.teeth = teeth;
+    }
+
+    // Метод рычать
+    public void roar() {
+        System.out.println("Хищник рычит!");
+    }
+
+    // Метод бежать
+    public void run() {
+        System.out.println("Хищник бежит!");
+    }
+
+    // Метод спать
+    public void sleep() {
+        System.out.println("Хищник спит.");
+    }
+
+    // Метод добывать пищу
+    public void hunt() {
+        System.out.println("Хищник добывает пищу!");
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Predator predator = (Predator) obj;
+        return claws.equals(predator.claws) && teeth.equals(predator.teeth);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = claws.hashCode();
+        result = 31 * result + teeth.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString() {
+        return "Predator{" +
+                "claws=" + claws +
+                ", teeth=" + teeth +
+                '}';
+    }
+}
+
+// Класс для тестирования
+class Mainn {
+    public static void main(String[] args) {
+        Claws claws = new Claws(10); 
+        Teeth teeth = new Teeth(15); 
+
+        Predator predator = new Predator(claws, teeth);
+
+        predator.roar();
+        predator.run();
+        predator.sleep();
+        predator.hunt();
+
+        System.out.println(predator);
+    }
+}
