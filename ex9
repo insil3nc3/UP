@@ -1,0 +1,376 @@
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
+public class AIPlayer {
+    private final Random random = new Random();
+
+    public boolean executeMove(GameBoard board, int number) {
+        List<int[]> availableCells = getAvailableCells(board);
+        if (availableCells.isEmpty()) {
+            return false;
+        } else {
+            int[] cell = availableCells.get(random.nextInt(availableCells.size()));
+            board.setCellValue(cell[0], cell[1], number);
+            return true;
+        }
+    }
+
+    private List<int[]> getAvailableCells(GameBoard board) {
+        List<int[]> availableCells = new ArrayList<>();
+        for (int i = 0; i < board.getRowCount(); i++) {
+            for (int j = 0; j < board.getColCount(); j++) {
+                if (board.isCellEmpty(i, j)) {
+                    availableCells.add(new int[]{i, j});
+                }
+            }
+        }
+        return availableCells;
+    }
+}
+import java.util.ArrayList;
+import java.util.Collections;
+
+public class CardDeck {
+    private ArrayList<Integer> cardPile;
+
+    public CardDeck() {
+        cardPile = new ArrayList<>();
+        for (int i = 1; i <= 13; i++) {
+            for (int j = 0; j < 4; j++) {
+                cardPile.add(i);
+            }
+        }
+        Collections.shuffle(cardPile);
+    }
+
+    public int draw() {
+        return cardPile.remove(0);
+    }
+
+    public boolean hasMoreCards() {
+        return !cardPile.isEmpty();
+    }
+}
+import javax.swing.*;
+import java.awt.*;
+
+public class GameBoard extends JPanel {
+    protected JButton[][] cells;
+    private String boardName;
+    private int[][] cellValues;
+    private MathBattleGame gameController;
+
+    public GameBoard(String boardName, MathBattleGame gameController) {
+        this.boardName = boardName;
+        this.gameController = gameController;
+        this.cellValues = new int[5][5];
+        setLayout(new BorderLayout());
+        JLabel nameLabel = new JLabel(boardName, SwingConstants.CENTER);
+        nameLabel.setFont(new Font("Arial", Font.BOLD, 18));
+        add(nameLabel, BorderLayout.NORTH);
+
+        JPanel gridPanel = new JPanel(new GridLayout(5, 5));
+        cells = new JButton[5][5];
+
+        for (int row = 0; row < 5; row++) {
+            for (int col = 0; col < 5; col++) {
+                cells[row][col] = new JButton("");
+                cells[row][col].setFont(new Font("Arial", Font.PLAIN, 20));
+                cells[row][col].setEnabled(false);
+                gridPanel.add(cells[row][col]);
+
+                if (boardName.equals("Игровое поле")) {
+                    int finalRow = row;
+                    int finalCol = col;
+                    cells[row][col].addActionListener(e -> {
+                        if (cells[finalRow][finalCol].isEnabled()) {
+                            int number = gameController.getDrawnNumber();
+                            cells[finalRow][finalCol].setText(String.valueOf(number));
+                            cellValues[finalRow][finalCol] = number;
+                            cells[finalRow][finalCol].setEnabled(false);
+                            gameController.userMoveCompleted();
+                        }
+                    });
+                }
+            }
+        }
+        add(gridPanel, BorderLayout.CENTER);
+    }
+
+    public void activateCells(int number) {
+        if (boardName.equals("Игровое поле")) {
+            for (int row = 0; row < 5; row++) {
+                for (int col = 0; col < 5; col++) {
+                    if (cells[row][col].getText().equals("")) {
+                        cells[row][col].setEnabled(true);
+                    }
+                }
+            }
+        }
+    }
+
+    public int getRowCount() {
+        return cellValues.length;
+    }
+
+    public int getColCount() {
+        return cellValues[0].length;
+    }
+
+    public boolean isCellEmpty(int row, int col) {
+        return cellValues[row][col] == 0;
+    }
+
+    public void deactivateCells() {
+        if (boardName.equals("Игровое поле")) {
+            for (int row = 0; row < 5; row++) {
+                for (int col = 0; col < 5; col++) {
+                    cells[row][col].setEnabled(false);
+                }
+            }
+        }
+    }
+
+    public void setCellValue(int row, int col, int number) {
+        cells[row][col].setText(String.valueOf(number));
+        cellValues[row][col] = number;
+    }
+
+    public int[][] getCellValues() {
+        return cellValues;
+    }
+
+    public boolean isBoardFull() {
+        for (int row = 0; row < 5; row++) {
+            for (int col = 0; col < 5; col++) {
+                if (cells[row][col].getText().equals("")) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+}
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+
+public class MathBattleGame extends JFrame implements ActionListener {
+    private CardDeck cardDeck;
+    private GameBoard playerBoard;
+    private GameBoard aiBoard;
+    private JLabel numberDisplayLabel;
+    private JButton generateNumberButton;
+    private int drawnNumber;
+    private AIPlayer aiPlayer;
+    private boolean gameIsOver;
+
+    public MathBattleGame() {
+        setTitle("Битва чисел");
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setSize(1200, 700);
+        setLayout(new BorderLayout(20, 20));  // Добавляем отступы по краям
+
+        cardDeck = new CardDeck();
+        playerBoard = new GameBoard("Игровое поле", this);
+        aiBoard = new GameBoard("Поле AI", this);
+        aiPlayer = new AIPlayer();
+
+        // Верхняя панель с текущим числом и кнопкой
+        JPanel headerPanel = new JPanel();
+        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
+        headerPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Отступы вокруг панели
+
+        numberDisplayLabel = new JLabel("Нажмите 'Сгенерировать число' для начала", SwingConstants.CENTER);
+        numberDisplayLabel.setFont(new Font("Arial", Font.BOLD, 20));  // Увеличен размер шрифта
+        numberDisplayLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        generateNumberButton = new JButton("Сгенерировать число");
+        generateNumberButton.setFont(new Font("Arial", Font.PLAIN, 18)); // Увеличен размер шрифта кнопки
+        generateNumberButton.addActionListener(this);
+        generateNumberButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+        generateNumberButton.setMargin(new Insets(10, 20, 10, 20)); // Увеличенные отступы внутри кнопки
+
+        headerPanel.add(numberDisplayLabel);
+        headerPanel.add(Box.createRigidArea(new Dimension(0, 10))); // Вертикальное пространство между элементами
+        headerPanel.add(generateNumberButton);
+
+        // Центральная панель с полями игрока и компьютера
+        JPanel gridPanel = new JPanel(new GridLayout(1, 2, 20, 20)); // Пространство между полями
+        gridPanel.setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20)); // Внешние отступы панели
+        gridPanel.add(playerBoard);
+        gridPanel.add(aiBoard);
+
+        add(headerPanel, BorderLayout.NORTH);
+        add(gridPanel, BorderLayout.CENTER);
+
+        gameIsOver = false;
+    }
+
+    @Override
+    public void actionPerformed(ActionEvent e) {
+        if (!gameIsOver) {
+            if (cardDeck.hasMoreCards()) {
+                drawnNumber = cardDeck.draw();
+                numberDisplayLabel.setText("Сгенерировано число: " + drawnNumber);
+
+                // Ход AI
+                boolean aiMoved = aiPlayer.executeMove(aiBoard, drawnNumber);
+
+                // Разрешаем игроку сделать ход
+                playerBoard.activateCells(drawnNumber);
+                generateNumberButton.setEnabled(false);
+
+                // Если AI не смог сделать ход (поле заполнено)
+                if (!aiMoved) {
+                    proceedToNextTurn();
+                }
+            }
+        }
+    }
+
+    public void proceedToNextTurn() {
+        generateNumberButton.setEnabled(true);
+        playerBoard.deactivateCells();
+
+        // Проверяем, заполнены ли поля
+        if (playerBoard.isBoardFull() && aiBoard.isBoardFull()) {
+            gameIsOver = true;
+            numberDisplayLabel.setText("Игра завершена!");
+            generateNumberButton.setEnabled(false);
+
+            // Подсчет очков
+            int playerScore = ScoreCalculator.computeScore(playerBoard);
+            int aiScore = ScoreCalculator.computeScore(aiBoard);
+
+            // Отображение результатов
+            JOptionPane.showMessageDialog(this,
+                    "Ваш результат: " + playerScore + "\nРезультат AI: " + aiScore,
+                    "Итоги игры",
+                    JOptionPane.INFORMATION_MESSAGE);
+        }
+    }
+
+    public void userMoveCompleted() {
+        // Этот метод вызывается после хода игрока
+        proceedToNextTurn();
+    }
+
+    public int getDrawnNumber() {
+        return drawnNumber;
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            MathBattleGame game = new MathBattleGame();
+            game.setVisible(true);
+        });
+    }
+}
+import java.util.*;
+
+public class ScoreCalculator {
+    public static int computeScore(GameBoard board) {
+        int[][] cellValues = board.getCellValues();
+        int totalScore = 0;
+
+        for (int i = 0; i < 5; i++) {
+            int[] row = cellValues[i];
+            int[] col = new int[5];
+            for (int j = 0; j < 5; j++) {
+                col[j] = cellValues[j][i];
+            }
+            totalScore += evaluateLine(row, false);
+            totalScore += evaluateLine(col, false);
+        }
+
+        int[] diag1 = new int[5];
+        int[] diag2 = new int[5];
+        for (int i = 0; i < 5; i++) {
+            diag1[i] = cellValues[i][i];
+            diag2[i] = cellValues[i][4 - i];
+        }
+        totalScore += evaluateLine(diag1, true);
+        totalScore += evaluateLine(diag2, true);
+
+        return totalScore;
+    }
+
+    private static int evaluateLine(int[] line, boolean isDiagonal) {
+        int score = 0;
+        Map<Integer, Integer> counts = new HashMap<>();
+        for (int num : line) {
+            counts.put(num, counts.getOrDefault(num, 0) + 1);
+        }
+
+        List<Integer> numberList = new ArrayList<>();
+        for (int num : line) {
+            numberList.add(num);
+        }
+
+        boolean lineScored = false;
+
+        if (!lineScored && Collections.frequency(numberList, 1) == 4) {
+            score += isDiagonal ? 210 : 200;
+            lineScored = true;
+        }
+
+        if (!lineScored && numberList.containsAll(Arrays.asList(1, 10, 11, 12, 13))) {
+            score += isDiagonal ? 160 : 150;
+            lineScored = true;
+        }
+
+        if (!lineScored && Collections.frequency(numberList, 1) == 3 && Collections.frequency(numberList, 13) == 2) {
+            score += isDiagonal ? 110 : 100;
+            lineScored = true;
+        }
+
+        if (!lineScored && isConsecutive(numberList)) {
+            score += isDiagonal ? 60 : 50;
+            lineScored = true;
+        }
+
+        if (!lineScored && counts.containsValue(4)) {
+            score += isDiagonal ? 170 : 160;
+            lineScored = true;
+        }
+
+        if (!lineScored && counts.size() == 2 && counts.containsValue(3) && counts.containsValue(2)) {
+            score += isDiagonal ? 90 : 80;
+            lineScored = true;
+        }
+
+        if (!lineScored && counts.containsValue(3)) {
+            score += isDiagonal ? 50 : 40;
+            lineScored = true;
+        }
+
+        if (!lineScored && counts.size() == 3 && Collections.frequency(new ArrayList<>(counts.values()), 2) == 2) {
+            score += isDiagonal ? 30 : 20;
+            lineScored = true;
+        }
+
+        if (!lineScored && counts.containsValue(2)) {
+            score += isDiagonal ? 20 : 10;
+            lineScored = true;
+        }
+
+        return score;
+    }
+
+    private static boolean isConsecutive(List<Integer> numbers) {
+        Set<Integer> uniqueNumbers = new HashSet<>(numbers);
+        if (uniqueNumbers.size() != 5) {
+            return false;
+        }
+        List<Integer> sortedNumbers = new ArrayList<>(uniqueNumbers);
+        Collections.sort(sortedNumbers);
+        for (int i = 0; i < sortedNumbers.size() - 1; i++) {
+            if (sortedNumbers.get(i + 1) - sortedNumbers.get(i) != 1) {
+                return false;
+            }
+        }
+        return true;
+    }
+}

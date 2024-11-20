@@ -1,0 +1,92 @@
+package org.example;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class Zachetka {
+    private String studentName;
+    private String studentID;
+    private List<Session> sessions;
+
+    public Zachetka(String studentName, String studentID) {
+        this.studentName = studentName;
+        this.studentID = studentID;
+        this.sessions = new ArrayList<>();
+    }
+
+    // Метод для добавления новой сессии
+    public Session addSession(int sessionNumber) {
+        Session newSession = new Session(sessionNumber);
+        sessions.add(newSession);
+        return newSession;
+    }
+
+    // Метод для отображения всей информации о зачётной книжке
+    public void displayZachetka() {
+        System.out.println("Зачетная книжка студента: " + studentName + " (ID: " + studentID + ")");
+        for (Session session : sessions) {
+            session.displaySession();
+        }
+    }
+
+    // Внутренний класс Session, представляющий отдельную сессию
+    public class Session {
+        private int sessionNumber;
+        private List<Exam> exams;
+
+        public Session(int sessionNumber) {
+            this.sessionNumber = sessionNumber;
+            this.exams = new ArrayList<>();
+        }
+
+        // Метод для добавления экзамена
+        public void addExam(String subject, String type, int grade) {
+            exams.add(new Exam(subject, type, grade));
+        }
+
+        // Отображение информации о сессии
+        public void displaySession() {
+            System.out.println("Сессия №" + sessionNumber);
+            for (Exam exam : exams) {
+                exam.displayExam();
+            }
+        }
+
+        // Внутренний класс Exam, представляющий отдельный экзамен
+        public class Exam {
+            private String subject;
+            private String type; // Например, "зачет" или "экзамен"
+            private int grade;
+
+            public Exam(String subject, String type, int grade) {
+                this.subject = subject;
+                this.type = type;
+                this.grade = grade;
+            }
+
+            // Отображение информации об экзамене
+            public void displayExam() {
+                System.out.println("Предмет: " + subject + ", Тип: " + type + ", Оценка: " + grade);
+            }
+        }
+    }
+}
+public class Main {
+    public static void main(String[] args) {
+        // Создаем объект зачётной книжки
+        Zachetka zachetka = new Zachetka("Иван Иванов", "12345");
+
+        // Добавляем первую сессию и экзамены к ней
+        Zachetka.Session firstSession = zachetka.addSession(1);
+        firstSession.addExam("Математика", "экзамен", 5);
+        firstSession.addExam("Физика", "зачет", 4);
+
+        // Добавляем вторую сессию и экзамены к ней
+        Zachetka.Session secondSession = zachetka.addSession(2);
+        secondSession.addExam("Программирование", "экзамен", 5);
+        secondSession.addExam("История", "зачет", 4);
+
+        // Выводим информацию о зачётной книжке
+        zachetka.displayZachetka();
+    }
+}

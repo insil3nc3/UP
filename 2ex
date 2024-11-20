@@ -1,0 +1,122 @@
+package org.example;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
+
+public class Bus {
+    String DriverName;
+    int bus_number;
+    int route_number;
+    String brand;
+    int start_using_year;
+    int mileage;
+
+    public Bus(String driverName, int bus_number, int route_number, String brand, int start_using_year, int mileage) {
+        DriverName = driverName;
+        this.bus_number = bus_number;
+        this.route_number = route_number;
+        this.brand = brand;
+        this.start_using_year = start_using_year;
+        this.mileage = mileage;
+    }
+
+    @Override
+    public String toString() {
+        return "bus{" +
+                "DriverName='" + DriverName + '\'' +
+                ", bus_number=" + bus_number +
+                ", route_number=" + route_number +
+                ", brand=" + brand +
+                ", start_using_year=" + start_using_year +
+                ", mileage=" + mileage +
+                '}';
+    }
+
+    public String getDriverName() {
+        return DriverName;
+    }
+
+    public void setDriverName(String driverName) {
+        DriverName = driverName;
+    }
+
+    public int getBus_number() {
+        return bus_number;
+    }
+
+    public void setBus_number(int bus_number) {
+        this.bus_number = bus_number;
+    }
+
+    public int getRoute_number() {
+        return route_number;
+    }
+
+    public void setRoute_number(int route_number) {
+        this.route_number = route_number;
+    }
+
+    public String getBrand() {
+        return brand;
+    }
+
+    public void setBrand(String brand) {
+        this.brand = brand;
+    }
+
+    public int getStart_using_year() {
+        return start_using_year;
+    }
+
+    public void setStart_using_year(int start_using_year) {
+        this.start_using_year = start_using_year;
+    }
+
+    public int getMileage() {
+        return mileage;
+    }
+
+    public void setMileage(int mileage) {
+        this.mileage = mileage;
+    }
+}
+class BusTesting {
+    public static void main(String[] args) {
+        List<Bus> buses = new ArrayList<>();
+        buses.add(new Bus("Иванов И.И.", 101, 5, "Mercedes", 2015, 200000));
+        buses.add(new Bus("Петров П.П.", 102, 10, "Volvo", 2018, 150000));
+        buses.add(new Bus("Сидоров С.С.", 103, 5, "MAN", 2010, 300000));
+        buses.add(new Bus("Кузнецов К.К.", 104, 7, "Scania", 2012, 250000));
+        buses.add(new Bus("Смирнов С.С.", 105, 10, "Iveco", 2015, 180000));
+
+        int routeNumber = 5;
+        int yearsInUse = 5;
+        int minMileage = 200000;
+
+        // a) Список автобусов для заданного номера маршрута
+        System.out.println("Автобусы для маршрута " + routeNumber + ":");
+        for (Bus bus : buses) {
+            if (bus.getRoute_number() == routeNumber) {
+                System.out.println(bus);
+            }
+        }
+
+        // b) Список автобусов, которые эксплуатируются больше заданного срока
+        int currentYear = Calendar.getInstance().get(Calendar.YEAR);
+        System.out.println("\nАвтобусы, которые эксплуатируются больше " + yearsInUse + " лет:");
+        for (Bus bus : buses) {
+            if (currentYear - bus.getStart_using_year() > yearsInUse) {
+                System.out.println(bus);
+            }
+        }
+
+        // c) Список автобусов, пробег у которых больше заданного расстояния
+        System.out.println("\nАвтобусы, пробег которых больше " + minMileage + " км:");
+        for (Bus bus : buses) {
+            if (bus.getMileage() > minMileage) {
+                System.out.println(bus);
+            }
+        }
+    }
+}

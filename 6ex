@@ -1,0 +1,191 @@
+package org.example;
+
+import java.io.*;
+import java.util.Objects;
+
+// Кастомное исключение для недопустимой остроты когтей
+class InvalidSharpnessException extends Exception {
+    public InvalidSharpnessException(String message) {
+        super(message);
+    }
+}
+
+// Кастомное исключение для недопустимого размера зубов
+class InvalidTeethSizeException extends Exception {
+    public InvalidTeethSizeException(String message) {
+        super(message);
+    }
+}
+
+// Класс Claws (Когти)
+class Claws {
+    private int sharpness; // Острота когтей
+
+    public Claws(int sharpness) throws InvalidSharpnessException {
+        if (sharpness <= 0) {
+            throw new InvalidSharpnessException(«Острота когтей должна быть положительным числом.»);
+        }
+        this.sharpness = sharpness;
+    }
+
+    public int getSharpness() {
+        return sharpness;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Claws1 claws = (Claws1) obj;
+        return sharpness == claws.getSharpness();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(sharpness);
+    }
+
+    @Override
+    public String toString() {
+        return «Claws{sharpness=» + sharpness + «}»;
+    }
+}
+
+// Класс Teeth (Зубы)
+class Teeth {
+    private int size; // Размер зубов
+
+    public Teeth(int size) throws InvalidTeethSizeException {
+        if (size <= 0) {
+            throw new InvalidTeethSizeException(«Размер зубов должен быть положительным числом.»);
+        }
+        this.size = size;
+    }
+
+    public int getSize() {
+        return size;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Teeth1 teeth = (Teeth1) obj;
+        return size == teeth.getSize();
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(size);
+    }
+
+    @Override
+    public String toString() {
+        return «Teeth{size=» + size + «}»;
+    }
+}
+
+// Класс Predator (Хищник)
+class Predator {
+    private Claws1 claws;
+    private Teeth1 teeth;
+
+    public Predator(Claws1 claws, Teeth1 teeth) {
+        this.claws = claws;
+        this.teeth = teeth;
+    }
+
+    // Метод рычать
+    public void roar() {
+        System.out.println(«Хищник рычит!»);
+    }
+
+    // Метод бежать
+    public void run() {
+        System.out.println(«Хищник бежит!»);
+    }
+
+    // Метод спать
+    public void sleep() {
+        System.out.println(«Хищник спит.»);
+    }
+
+    // Метод добывать пищу
+    public void hunt() {
+        System.out.println(«Хищник добывает пищу!»);
+    }
+
+    // Метод записи объекта Predator в файл
+    public void saveToFile(String fileName) {
+        try (ObjectOutputStream out = new ObjectOutputStream(new FileOutputStream(fileName))) {
+            out.writeObject(this);
+            System.out.println(«Объект Predator успешно сохранен в файл.»);
+        } catch (IOException e) {
+            System.err.println(«Ошибка при сохранении объекта в файл: « + e.getMessage());
+        }
+    }
+
+    // Метод загрузки объекта Predator из файла
+    public static Predator loadFromFile(String fileName) {
+        try (ObjectInputStream in = new ObjectInputStream(new FileInputStream(fileName))) {
+            return (Predator) in.readObject();
+        } catch (FileNotFoundException e) {
+            System.err.println(«Файл не найден: « + e.getMessage());
+        } catch (IOException e) {
+            System.err.println(«Ошибка при чтении объекта из файла: « + e.getMessage());
+        } catch (ClassNotFoundException e) {
+            System.err.println(«Класс Predator не найден: « + e.getMessage());
+        }
+        return null;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Predator predator = (Predator) obj;
+        return claws.equals(predator.claws) && teeth.equals(predator.teeth);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(claws, teeth);
+    }
+
+    @Override
+    public String toString() {
+        return «Predator{« +
+                «claws=» + claws +
+                «, teeth=» + teeth +
+                '}';
+    }
+}
+
+// Класс для тестирования
+class Mainn {
+    public static void main(String[] args) {
+        try {
+            Claws1 claws = new Claws1(10); // Создаем когти с остротой 10
+            Teeth1 teeth = new Teeth1(15); // Создаем зубы с размером 15
+
+            Predator predator = new Predator(claws, teeth);
+
+            predator.roar();
+            predator.run();
+            predator.sleep();
+            predator.hunt();
+
+            System.out.println(predator);
+
+            // Сохранение объекта в файл
+            predator.saveToFile(«predator.dat»);
+
+            // Загрузка объекта из файла
+            Predator loadedPredator = Predator.loadFromFile(«predator.dat»);
+            System.out.println(«Загруженный объект: « + loadedPredator);
+
+        } catch (OutOfMemoryError e) {
+            System.err.println(«Ошибка: недостаточно памяти для создания объекта Predator.»);
+        }
+    }
+}

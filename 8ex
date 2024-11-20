@@ -1,0 +1,134 @@
+import javax.swing.*;
+import java.awt.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+
+class TFish {
+    protected int x, y; // Координаты
+    protected int speed;
+    protected int size;
+    protected Color color;
+    protected int direction; // Направление движения в градусах
+
+    public TFish(int x, int y, int speed, int size, Color color, int direction) {
+        this.x = x;
+        this.y = y;
+        this.speed = speed;
+        this.size = size;
+        this.color = color;
+        this.direction = direction;
+    }
+
+    public void draw(Graphics g) {
+        // Абстрактный метод для отображения рыбки
+    }
+
+    public boolean look(List<TFish> others) {
+        for (TFish other : others) {
+            if (other != this && distanceTo(other) < size * 2) { // в пределах видимости
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void run() {
+        // Перемещение в текущем направлении
+        x += Math.cos(Math.toRadians(direction)) * speed;
+        y += Math.sin(Math.toRadians(direction)) * speed;
+    }
+
+    protected double distanceTo(TFish other) {
+        return Math.sqrt(Math.pow(x - other.x, 2) + Math.pow(y - other.y, 2));
+    }
+}
+
+class TPike extends TFish {
+    public TPike(int x, int y, int speed, int size, int direction) {
+        super(x, y, speed, size, Color.GREEN, direction);
+    }
+
+    @Override
+    public void draw(Graphics g) {
+        // Отображаем щуку как зеленую стрелку
+        g.setColor(color);
+        int[] xPoints = {x, x - size, x + size};
+        int[] yPoints = {y, y + size, y + size};
+        g.fillPolygon(xPoints, yPoints, 3);
+    }
+
+    public void eat(List<TFish> karps) {
+        Iterator<TFish> iterator = karps.iterator();
+        while (iterator.hasNext()) {
+            TFish karp = iterator.next();
+            if (karp instanceof TKarp && distanceTo(karp) < size * 2) {
+                iterator.remove();
+                break;
+            }
+        }
+    }
+}
+
+class TKarp extends TFish {
+    public TKarp(int x, int y, int speed, int size, int direction) {
+        super(x, y, speed, size, Color.RED, direction);
+    }
+
+    @Override
+    public void draw(Graphics g) {
+        // Отображаем карпа как красный треугольник
+        g.setColor(color);
+        int[] xPoints = {x, x - size, x + size};
+        int[] yPoints = {y, y - size, y - size};
+        g.fillPolygon(xPoints, yPoints, 3);
+    }
+}
+
+public class AquariumSimulation extends JPanel {
+    private List<TFish> fishList = new ArrayList<>();
+
+    public AquariumSimulation() {
+        // Добавляем рыб в аквариум
+        fishList.add(new TPike(100, 100, 2, 10, 0));
+        fishList.add(new TKarp(150, 150, 2, 8, 180));
+        fishList.add(new TKarp(200, 200, 2, 8, 180));
+
+        Timer timer = new Timer(50, e -> {
+            updateFishPositions();
+            repaint();
+        });
+        timer.start();
+    }
+
+    private void updateFishPositions() {
+        // Обновляем позиции рыб
+        for (TFish fish : fishList) {
+            fish.run();
+        }
+
+        // Проверяем, может ли щука съесть карпа
+        for (TFish fish : fishList) {
+            if (fish instanceof TPike) {
+                ((TPike) fish).eat(fishList);
+            }
+        }
+    }
+
+    @Override
+    protected void paintComponent(Graphics g) {
+        super.paintComponent(g);
+        for (TFish fish : fishList) {
+            fish.draw(g);
+        }
+    }
+
+    public static void main(String[] args) {
+        JFrame frame = new JFrame("Aquarium Simulation");
+        AquariumSimulation aquarium = new AquariumSimulation();
+        frame.add(aquarium);
+        frame.setSize(800, 600);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+    }
+}
