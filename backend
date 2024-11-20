@@ -1,0 +1,123 @@
+import mysql.connector
+from mysql.connector import Error
+import csv
+
+class DatabaseClient:
+    def __init__(self):
+        try:
+            # Подключение к удаленной базе данных
+            self.connection = mysql.connector.connect(
+                host='autorack.proxy.rlwy.net',
+                user='root',
+                password='viHZOzjbzONsUjKTjRzscrtAeNBnJWie',
+                database='railway',
+                port=20456,
+                charset="utf8mb4"  # Устанавливаем кодировку соединения
+            )
+
+            if self.connection.is_connected():
+                print("Connected to MySQL database")
+        except Error as e:
+            print(f"Error: {e}")
+
+    def fetch_all_tickets(self):
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM tickets")
+            records = cursor.fetchall()
+            for row in records:
+                print(row)
+            return records
+        except Error as e:
+            print(f"Error fetching tickets: {e}")
+
+    def add_ticket(self, customer_name, issue_description, status="open"):
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute(
+                "INSERT INTO tickets (customer_name, issue_description, status) VALUES (%s, %s, %s)",
+                (customer_name, issue_description, status)
+            )
+            self.connection.commit()
+            print("Ticket added successfully.")
+        except Error as e:
+            print(f"Error adding ticket: {e}")
+
+    def delete_ticket(self, ticket_id):
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("DELETE FROM tickets WHERE id = %s", (ticket_id,))
+            self.connection.commit()
+            print(f"Ticket with ID {ticket_id} deleted successfully.")
+        except Error as e:
+            print(f"Error deleting ticket: {e}")
+
+    def update_ticket(self, ticket_id, status):
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("UPDATE tickets SET status = %s, updated_at = NOW() WHERE id = %s", (status, ticket_id))
+            self.connection.commit()
+            print("Ticket updated successfully.")
+        except Error as e:
+            print(f"Error updating ticket: {e}")
+
+    def search_tickets(self, search_text):
+        try:
+            cursor = self.connection.cursor()
+            query = "SELECT * FROM tickets WHERE customer_name LIKE %s OR issue_description LIKE %s"
+            cursor.execute(query, (f"%{search_text}%", f"%{search_text}%"))
+            results = cursor.fetchall()
+            for row in results:
+                print(row)
+            return results
+        except Error as e:
+            print(f"Error searching tickets: {e}")
+
+    def fetch_tickets_by_status(self, status):
+        try:
+            cursor = self.connection.cursor()
+            cursor.execute("SELECT * FROM tickets WHERE status = %s", (status,))
+            return cursor.fetchall()
+        except Error as e:
+            print(f"Error fetching tickets by status: {e}")
+
+    def get_ticket_statistics(self):
+        try:
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute("SELECT status, COUNT(*) AS count FROM tickets GROUP BY status")
+            stats = {row['status']: row['count'] for row in cursor.fetchall()}
+            return {"open": stats.get("open", 0), "in_progress": stats.get("in_progress", 0), "closed": stats.get("closed", 0)}
+        except Error as e:
+            print(f"Error fetching ticket statistics: {e}")
+            return {"open": 0, "in_progress": 0, "closed": 0}
+
+    def save_to_file(self, filename="tickets.txt"):
+        tickets = self.fetch_all_tickets()
+        with open(filename, "w") as file:
+            for ticket in tickets:
+                file.write(str(ticket) + "\n")
+        print(f"Saved tickets to {filename}")
+
+    def export_to_csv(self, filepath):
+        try:
+            tickets = self.fetch_all_tickets()
+            with open(filepath, mode='w', newline='') as file:
+                writer = csv.writer(file)
+                writer.writerow(["ID", "Customer Name", "Issue Description", "Status", "Created At", "Updated At"])
+                writer.writerows(tickets)
+            print(f"Tickets exported to {filepath}")
+        except Error as e:
+            print(f"Error exporting to CSV: {e}")
+
+    # Add this method in DatabaseClient in Backend.py
+    def verify_user(self, username, password):
+        try:
+            cursor = self.connection.cursor(dictionary=True)
+            cursor.execute("SELECT role FROM users WHERE username = %s AND password = %s", (username, password))
+            user = cursor.fetchone()
+            return user['role'] if user else None
+        except Error as e:
+            print(f"Error verifying user: {e}")
+            return None
+
+
